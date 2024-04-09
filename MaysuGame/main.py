@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, Canvas, messagebox
 
+from verificacion import verificar_solucion
+
+
 # Variables globales para el canvas, el tamaño de cada celda, la última posición clickada y la ruta
 canvas = None
 tamano_celda = 50
@@ -78,50 +81,6 @@ def dibujar_linea(pos_inicio, pos_final):
     canvas.create_line(x_inicio, y_inicio, x_final, y_final, fill="red", width=2)
 
 
-def verificar_solucion():
-    # Verificar que la ruta sea continua
-    if not es_ruta_continua(ruta):
-        messagebox.showerror("Verificación", "La ruta no es continua.")
-        return
-
-    # Verificar que todas las perlas blancas estén en la ruta
-    perlas_blancas = {(fila, columna) for fila, columna, tipo in perlas if tipo == 1}
-    if not perlas_blancas.issubset(set(ruta)):
-        messagebox.showerror("Verificación", "No todas las perlas blancas están en la ruta.")
-        return
-
-    # Verificar que la ruta pase al lado de todas las perlas negras sin pasar por ellas
-    perlas_negras = {(fila, columna) for fila, columna, tipo in perlas if tipo == 2}
-    if not ruta_adyacente_a_perlas_negras(perlas_negras, ruta):
-        messagebox.showerror("Verificación", "La ruta no cumple con las condiciones de las perlas negras.")
-        return
-
-    messagebox.showinfo("Verificación", "¡La ruta está correcta!")
-
-
-def es_ruta_continua(ruta):
-    for i in range(len(ruta) - 1):
-        fila_actual, columna_actual = ruta[i]
-        fila_siguiente, columna_siguiente = ruta[i + 1]
-        # La ruta es continua si cada paso es adyacente al anterior
-        if abs(fila_actual - fila_siguiente) + abs(columna_actual - columna_siguiente) != 1:
-            return False
-    return True
-
-
-def ruta_adyacente_a_perlas_negras(perlas_negras, ruta):
-    for perla_negra in perlas_negras:
-        fila_pn, columna_pn = perla_negra
-        adyacente = False
-        for fila_r, columna_r in ruta:
-            if abs(fila_pn - fila_r) + abs(columna_pn - columna_r) == 1:
-                adyacente = True
-                break
-        # Si alguna perla negra no es adyacente a la ruta, retorna False
-        if not adyacente:
-            return False
-    return True
-
 
 root = tk.Tk()
 root.title("Juego de Maysu")
@@ -129,7 +88,8 @@ root.title("Juego de Maysu")
 btn_cargar = tk.Button(root, text="Cargar Tablero", command=cargar_tablero)
 btn_cargar.pack()
 
-btn_verificar = tk.Button(root, text="Verificar Solución", command=verificar_solucion)
+# Actualiza esta parte para usar la función importada
+btn_verificar = tk.Button(root, text="Verificar Solución", command=lambda: verificar_solucion(ruta, perlas))
 btn_verificar.pack()
 
 root.mainloop()
