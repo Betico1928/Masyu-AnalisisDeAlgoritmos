@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, Canvas, messagebox
-
-from verificacion import verificar_solucion
+from verificacion import verificar_solucion, resolver_puzzle
 
 
 # Variables globales para el canvas, el tamaño de cada celda, la última posición clickada y la ruta
@@ -10,10 +9,11 @@ tamano_celda = 50
 ultima_pos_click = None
 ruta = []  # Almacenará la ruta como una lista de tuplas (fila, columna)
 perlas = []  # Almacenará las posiciones de las perlas
+tamano_tablero = 0  # Almacenará el tamaño del tablero
 
 
 def cargar_tablero():
-    global canvas, ultima_pos_click, ruta, perlas
+    global canvas, ultima_pos_click, ruta, perlas, tamano_tablero
     filepath = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
     if not filepath:
         return
@@ -54,42 +54,54 @@ def dibujar_tablero(tamano, perlas):
             color_fondo = "black"
             color_borde = "black"
         # Dibujar la perla con un efecto tridimensional
-        canvas.create_oval(centro_x - 20, centro_y - 20, centro_x + 20, centro_y + 20, fill=color_fondo,
-                           outline=color_borde, width=2)
-        # Sombreado para el efecto tridimensional
-        if tipo == 1:  # Sólo las perlas blancas necesitan un sombreado visible
-            canvas.create_arc(centro_x - 20, centro_y - 20, centro_x + 20, centro_y + 20, start=45, extent=180,
-                              style=tk.ARC, outline="gray", width=2)
+        canvas.create_oval(centro_x - 20, centro_y - 20, centro_x + 20, centro_y + 20, fill=color_fondo, outline=color_borde, width=2)
+
 
 def click_en_tablero(event):
     global ultima_pos_click, ruta
     columna = event.x // tamano_celda + 1
     fila = event.y // tamano_celda + 1
-    if ultima_pos_click:
-        dibujar_linea(ultima_pos_click, (fila, columna))
-        ruta.append((fila, columna))
+
+    if ultima_pos_click is None:
+        ultima_pos_click = (fila, columna)
+        ruta.append(ultima_pos_click)
+        dibujar_ruta()
     else:
-        ruta.append((fila, columna))
-    ultima_pos_click = (fila, columna)
+        ultima_pos_click = (fila, columna)
+        ruta.append(ultima_pos_click)
+        dibujar_ruta()
 
 
-def dibujar_linea(pos_inicio, pos_final):
-    x_inicio = (pos_inicio[1] - 1) * tamano_celda + tamano_celda // 2
-    y_inicio = (pos_inicio[0] - 1) * tamano_celda + tamano_celda // 2
-    x_final = (pos_final[1] - 1) * tamano_celda + tamano_celda // 2
-    y_final = (pos_final[0] - 1) * tamano_celda + tamano_celda // 2
-    canvas.create_line(x_inicio, y_inicio, x_final, y_final, fill="red", width=2)
+def dibujar_ruta():
+    canvas.delete("ruta")
+    if ruta is not None:
+        for i in range(len(ruta) - 1):
+            x_inicio = (ruta[i][1] - 1) * tamano_celda + tamano_celda // 2
+            y_inicio = (ruta[i][0] - 1) * tamano_celda + tamano_celda // 2
+            x_final = (ruta[i + 1][1] - 1) * tamano_celda + tamano_celda // 2
+            y_final = (ruta[i + 1][0] - 1) * tamano_celda + tamano_celda // 2
+            canvas.create_line(x_inicio, y_inicio, x_final, y_final, fill="red", width=2, tags="ruta")
 
+
+def resolver():
+    global ruta
+    ruta = resolver_puzzle(perlas, tamano_tablero)
+    if ruta:
+        dibujar_ruta()
+    else:
+        messagebox.showinfo("Resolver", "No se encontró una solución para el puzzle.")
 
 
 root = tk.Tk()
-root.title("Juego de Maysu")
+root.title("Juego de Masyu")
 
 btn_cargar = tk.Button(root, text="Cargar Tablero", command=cargar_tablero)
 btn_cargar.pack()
 
-# Actualiza esta parte para usar la función importada
 btn_verificar = tk.Button(root, text="Verificar Solución", command=lambda: verificar_solucion(ruta, perlas))
 btn_verificar.pack()
+
+btn_resolver = tk.Button(root, text="Resolver", command=resolver)
+btn_resolver.pack()
 
 root.mainloop()
