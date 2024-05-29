@@ -1,80 +1,62 @@
 import heapq
-from verificaciones import verificar_linea_continua, verificar_perla_blanca, verificar_perla_negra
 
-def distancia_manhattan(punto1, punto2):
-    return abs(punto1[0] - punto2[0]) + abs(punto1[1] - punto2[1])
 
-def obtener_vecinos(n_filas, n_columnas, punto):
+# Función heurística basada en la distancia de Manhattan
+def distancia_manhattan(fila1, columna1, fila2, columna2):
+    return abs(fila1 - fila2) + abs(columna1 - columna2)
+
+
+# Función para obtener los vecinos de una posición
+def obtener_vecinos(fila, columna, n_filas, n_columnas):
     vecinos = []
-    movimientos = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    for movimiento in movimientos:
-        nuevo_punto = (punto[0] + movimiento[0], punto[1] + movimiento[1])
-        if 0 <= nuevo_punto[0] < n_filas and 0 <= nuevo_punto[1] < n_columnas:
-            vecinos.append(nuevo_punto)
+    if fila > 0:
+        vecinos.append((fila - 1, columna))
+    if fila < n_filas - 1:
+        vecinos.append((fila + 1, columna))
+    if columna > 0:
+        vecinos.append((fila, columna - 1))
+    if columna < n_columnas - 1:
+        vecinos.append((fila, columna + 1))
     return vecinos
 
-def es_punto_valido(tablero, punto, perlas, ruta):
-    y, x = punto
-    if tablero[y][x] != 0:
-        return False
 
-    # Simular la adición del punto a la ruta
-    ruta.append(punto)
-    es_valido = True
-    for perla in perlas:
-        py, px, tipo = perla
-        py -= 1
-        px -= 1
-        if (py, px) == (y, x):
-            if tipo == 1 and not verificar_perla_blanca(ruta, py, px):
-                es_valido = False
-                break
-            if tipo == 2 and not verificar_perla_negra(ruta, py, px):
-                es_valido = False
-                break
-    # Eliminar el punto simulado de la ruta
-    ruta.pop()
-    return es_valido
+# Función para completar la ruta usando A*
+def completar_ruta(n_filas, n_columnas, perlas, ruta_actual):
+    if not ruta_actual:
+        return None
 
-def completar_ruta(n_filas, n_columnas, perlas, ruta_inicial):
-    # Inicializar el tablero con la ruta inicial
-    tablero = [[0 for _ in range(n_columnas)] for _ in range(n_filas)]
-    for y, x in ruta_inicial:
-        tablero[y][x] = 1
+    inicio = ruta_actual[0]
+    meta = ruta_actual[-1]
 
-    # Inicializar los nodos de inicio y fin
-    inicio = ruta_inicial[-1]
-    metas = [(perla[0] - 1, perla[1] - 1) for perla in perlas]
+    # Inicialización de estructuras de A*
+    open_set = []
+    heapq.heappush(open_set, (0, inicio))
+    came_from = {}
+    g_score = {inicio: 0}
+    f_score = {inicio: distancia_manhattan(*inicio, *meta)}
 
-    # Cola de prioridad para el algoritmo A*
-    cola_prioridad = []
-    heapq.heappush(cola_prioridad, (0, inicio))
+    while open_set:
+        _, actual = heapq.heappop(open_set)
 
-    # Diccionarios para rastrear costos y rutas
-    costos = {inicio: 0}
-    rutas = {inicio: ruta_inicial}
+        if actual == meta:
+            return reconstruir_camino(came_from, actual)
 
-    mejor_ruta = ruta_inicial
+        for vecino in obtener_vecinos(*actual, n_filas, n_columnas):
+            tentative_g_score = g_score[actual] + 1
 
-    while cola_prioridad:
-        _, actual = heapq.heappop(cola_prioridad)
+            if vecino not in g_score or tentative_g_score < g_score[vecino]:
+                came_from[vecino] = actual
+                g_score[vecino] = tentative_g_score
+                f_score[vecino] = tentative_g_score + distancia_manhattan(*vecino, *meta)
+                heapq.heappush(open_set, (f_score[vecino], vecino))
 
-        for vecino in obtener_vecinos(n_filas, n_columnas, actual):
-            nueva_ruta = rutas[actual] + [vecino]
+    return ruta_actual  # Devuelve la ruta más larga encontrada si no encuentra la solución
 
-            if es_punto_valido(tablero, vecino, perlas, nueva_ruta):
-                tablero[vecino[0]][vecino[1]] = 1
-                nuevo_costo = costos[actual] + 1
-                costos[vecino] = nuevo_costo
-                prioridad = nuevo_costo + min(distancia_manhattan(vecino, meta) for meta in metas)
-                heapq.heappush(cola_prioridad, (prioridad, vecino))
-                rutas[vecino] = nueva_ruta
 
-                if len(nueva_ruta) > len(mejor_ruta):
-                    mejor_ruta = nueva_ruta
-
-                # Comprobar si hemos alcanzado la meta
-                if all(any(punto == meta for punto in nueva_ruta) for meta in metas):
-                    return nueva_ruta
-
-    return mejor_ruta
+# Función para reconstruir el camino desde la meta hasta el inicio
+def reconstruir_camino(came_from, actual):
+    total_path = [actual]
+    while actual in came_from:
+        actual = came_from[actual]
+        total_path.append(actual)
+    return total_path[::-1]
