@@ -44,6 +44,19 @@ class Masyu:
         self.boton_verificar = tk.Button(master, text="Verificar Solución", command=self.verificar_solucion)
         self.boton_verificar.pack()
 
+        # Agregar el botón para completar la ruta automáticamente
+        self.boton_auto = tk.Button(master, text="Completar Ruta", command=self.completar_ruta_automatica)
+        self.boton_auto.pack()
+
+        # Método para completar la ruta automáticamente
+    def completar_ruta_automatica(self):
+        from supersolver import completar_ruta
+        nueva_ruta = completar_ruta(self.n_filas, self.n_columnas, self.perlas, self.linea_actual)
+        self.linea_actual = nueva_ruta
+        self.dibujar_linea()
+        self.imprimir_ruta()
+
+
     def dibujar_tablero(self):
         for i in range(self.n_filas):
             for j in range(self.n_columnas):
