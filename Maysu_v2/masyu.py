@@ -48,13 +48,16 @@ class Masyu:
         self.boton_auto = tk.Button(master, text="Completar Ruta", command=self.completar_ruta_automatica)
         self.boton_auto.pack()
 
-        # Método para completar la ruta automáticamente
+    # Método para completar la ruta automáticamente
     def completar_ruta_automatica(self):
         from supersolver import completar_ruta
         nueva_ruta = completar_ruta(self.n_filas, self.n_columnas, self.perlas, self.linea_actual)
-        self.linea_actual = nueva_ruta
-        self.dibujar_linea()
-        self.imprimir_ruta()
+        if nueva_ruta:
+            self.linea_actual = nueva_ruta
+            self.dibujar_linea()
+            self.imprimir_ruta()
+        else:
+            messagebox.showerror("Error", "No se pudo completar la ruta.")
 
 
     def dibujar_tablero(self):
@@ -187,7 +190,7 @@ def verificar_perla_negra(linea, fila, columna):
 
 
 if __name__ == "__main__":
-    n_filas, n_columnas, perlas = leer_archivo_entrada('input.txt')
+    n_filas, n_columnas, perlas = leer_archivo_entrada('inputt.txt')
 
     root = tk.Tk()
     root.title("Juego Masyu")
