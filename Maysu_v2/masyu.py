@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+from supersolver import completar_ruta
+from verificaciones import verificar_solucion
 
 
 # Función para leer el archivo de entrada y extraer la configuración del tablero
@@ -15,7 +17,6 @@ def leer_archivo_entrada(ruta):
         perlas.append((fila, columna, tipo))
 
     return n, n, perlas
-
 
 # Clase para manejar la lógica del juego y la interfaz gráfica
 class Masyu:
@@ -48,9 +49,7 @@ class Masyu:
         self.boton_auto = tk.Button(master, text="Completar Ruta", command=self.completar_ruta_automatica)
         self.boton_auto.pack()
 
-    # Método para completar la ruta automáticamente
     def completar_ruta_automatica(self):
-        from supersolver import completar_ruta
         nueva_ruta = completar_ruta(self.n_filas, self.n_columnas, self.perlas, self.linea_actual)
         if nueva_ruta:
             self.linea_actual = nueva_ruta
@@ -58,7 +57,6 @@ class Masyu:
             self.imprimir_ruta()
         else:
             messagebox.showerror("Error", "No se pudo completar la ruta.")
-
 
     def dibujar_tablero(self):
         for i in range(self.n_filas):
@@ -127,75 +125,7 @@ class Masyu:
                 [f"Fila {e[0] + 1}, Columna {e[1] + 1}" for e in errores])
             messagebox.showerror("Resultado", mensaje_error)
             print("Errores en las celdas:", errores)
-        # Aquí podrías agregar la lógica para mostrar la ruta correcta si se desea
 
-
-# Función para verificar si la solución es correcta
-def verificar_solucion(linea, perlas):
-    errores = []
-    if not verificar_linea_continua(linea):
-        errores.append(("Línea no continua",))
-
-    for fila, columna, tipo in perlas:
-        if tipo == 1:  # Perla blanca
-            if not verificar_perla_blanca(linea, fila - 1, columna - 1):
-                errores.append((fila - 1, columna - 1))
-        elif tipo == 2:  # Perla negra
-            if not verificar_perla_negra(linea, fila - 1, columna - 1):
-                errores.append((fila - 1, columna - 1))
-    return len(errores) == 0, errores
-
-
-def verificar_linea_continua(linea):
-    if len(linea) < 2:
-        return False
-    for i in range(1, len(linea)):
-        y1, x1 = linea[i - 1]
-        y2, x2 = linea[i]
-        if abs(y1 - y2) + abs(x1 - x2) != 1:
-            return False
-    return True
-
-
-def verificar_perla_blanca(linea, fila, columna):
-    # Verifica si la línea pasa por la perla blanca de forma recta con giros en las esquinas
-    indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
-    if len(indices) != 1:
-        return False
-    indice = indices[0]
-    if indice == 0 or indice == len(linea) - 1:
-        return False
-    y1, x1 = linea[indice - 1]
-    y2, x2 = linea[indice + 1]
-    if (y1 == fila and y2 == fila and x1 != columna and x2 != columna) or (
-            x1 == columna and x2 == columna and y1 != fila and y2 != fila):
-        return True
-    return False
-
-
-def verificar_perla_negra(linea, fila, columna):
-    # Verifica si la línea hace un giro de 90 grados en la perla negra y si sigue recto después del giro
-    indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
-    if len(indices) != 1:
-        return False
-    indice = indices[0]
-    if indice == 0 or indice == len(linea) - 1:
-        return False
-    y1, x1 = linea[indice - 1]
-    y2, x2 = linea[indice + 1]
-
-    # Verificar el giro de 90 grados
-    if not ((y1 == fila and x2 == columna and abs(x1 - columna) == 1 and abs(y2 - fila) == 1) or
-            (x1 == columna and y2 == fila and abs(y1 - fila) == 1 and abs(x2 - columna) == 1)):
-        return False
-
-    # Verificar que sigue recto después del giro
-    if indice + 2 < len(linea):
-        y3, x3 = linea[indice + 2]
-        if (y2 == fila and x2 != columna and y3 != fila) or (x2 == columna and y2 != fila and x3 != columna):
-            return False
-
-    return True
 
 
 if __name__ == "__main__":
