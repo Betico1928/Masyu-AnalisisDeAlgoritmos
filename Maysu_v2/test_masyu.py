@@ -2,8 +2,8 @@ import unittest
 import tkinter as tk
 from unittest.mock import patch
 from io import StringIO
-from masyu import Masyu, leer_archivo_entrada, verificar_solucion, verificar_linea_continua, verificar_perla_blanca, \
-    verificar_perla_negra
+from masyu import Masyu, leer_archivo_entrada
+from verificaciones import *
 
 
 class TestMasyu(unittest.TestCase):
