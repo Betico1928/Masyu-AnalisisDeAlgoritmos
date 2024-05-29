@@ -13,24 +13,28 @@ def obtener_vecinos(n_filas, n_columnas, punto):
             vecinos.append(nuevo_punto)
     return vecinos
 
-def es_punto_valido(tablero, punto, perlas):
+def es_punto_valido(tablero, punto, perlas, ruta):
     y, x = punto
     if tablero[y][x] != 0:
         return False
-    for perla in perlas:
-        if perla[0] == y + 1 and perla[1] == x + 1:
-            return True
-    return True
 
-def verificar_solucion_parcial(linea, perlas):
-    for fila, columna, tipo in perlas:
-        if tipo == 1:  # Perla blanca
-            if not verificar_perla_blanca(linea, fila - 1, columna - 1):
-                return False
-        elif tipo == 2:  # Perla negra
-            if not verificar_perla_negra(linea, fila - 1, columna - 1):
-                return False
-    return True
+    # Simular la adición del punto a la ruta
+    ruta.append(punto)
+    es_valido = True
+    for perla in perlas:
+        py, px, tipo = perla
+        py -= 1
+        px -= 1
+        if (py, px) == (y, x):
+            if tipo == 1 and not verificar_perla_blanca(ruta, py, px):
+                es_valido = False
+                break
+            if tipo == 2 and not verificar_perla_negra(ruta, py, px):
+                es_valido = False
+                break
+    # Eliminar el punto simulado de la ruta
+    ruta.pop()
+    return es_valido
 
 def completar_ruta(n_filas, n_columnas, perlas, ruta_inicial):
     # Inicializar el tablero con la ruta inicial
@@ -50,22 +54,27 @@ def completar_ruta(n_filas, n_columnas, perlas, ruta_inicial):
     costos = {inicio: 0}
     rutas = {inicio: ruta_inicial}
 
+    mejor_ruta = ruta_inicial
+
     while cola_prioridad:
         _, actual = heapq.heappop(cola_prioridad)
 
-        if actual in metas:
-            ruta_completa = rutas[actual]
-            if verificar_solucion_parcial(ruta_completa, perlas):
-                return ruta_completa
-
         for vecino in obtener_vecinos(n_filas, n_columnas, actual):
-            nuevo_costo = costos[actual] + 1
             nueva_ruta = rutas[actual] + [vecino]
-            if vecino not in costos or nuevo_costo < costos[vecino]:
-                if es_punto_valido(tablero, vecino, perlas):
-                    costos[vecino] = nuevo_costo
-                    prioridad = nuevo_costo + min(distancia_manhattan(vecino, meta) for meta in metas)
-                    heapq.heappush(cola_prioridad, (prioridad, vecino))
-                    rutas[vecino] = nueva_ruta
 
-    return None
+            if es_punto_valido(tablero, vecino, perlas, nueva_ruta):
+                tablero[vecino[0]][vecino[1]] = 1
+                nuevo_costo = costos[actual] + 1
+                costos[vecino] = nuevo_costo
+                prioridad = nuevo_costo + min(distancia_manhattan(vecino, meta) for meta in metas)
+                heapq.heappush(cola_prioridad, (prioridad, vecino))
+                rutas[vecino] = nueva_ruta
+
+                if len(nueva_ruta) > len(mejor_ruta):
+                    mejor_ruta = nueva_ruta
+
+                # Comprobar si hemos alcanzado la meta
+                if all(any(punto == meta for punto in nueva_ruta) for meta in metas):
+                    return nueva_ruta
+
+    return mejor_ruta

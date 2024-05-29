@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from supersolver import completar_ruta
 from verificaciones import verificar_solucion
-
+from supersolver import completar_ruta
 
 # Función para leer el archivo de entrada y extraer la configuración del tablero
 def leer_archivo_entrada(ruta):
@@ -56,7 +55,10 @@ class Masyu:
             self.dibujar_linea()
             self.imprimir_ruta()
         else:
-            messagebox.showerror("Error", "No se pudo completar la ruta.")
+            messagebox.showinfo("Resultado", "No se encontró una ruta completa, mostrando la mejor ruta encontrada.")
+            self.linea_actual = nueva_ruta
+            self.dibujar_linea()
+            self.imprimir_ruta()
 
     def dibujar_tablero(self):
         for i in range(self.n_filas):
@@ -101,7 +103,7 @@ class Masyu:
     def mover_derecha(self, event):
         if self.linea_actual:
             y, x = self.linea_actual[-1]
-            if x < self.n_columnas - 1:
+            if (x < self.n_columnas - 1):
                 self.linea_actual.append((y, x + 1))
                 self.dibujar_linea()
                 self.imprimir_ruta()
