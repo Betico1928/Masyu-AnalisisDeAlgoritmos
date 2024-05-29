@@ -175,28 +175,17 @@ def verificar_perla_blanca(linea, fila, columna):
 
 
 def verificar_perla_negra(linea, fila, columna):
-    # Find the index of the black pearl in the line
+    # Verifica si la línea hace un giro de 90 grados en la perla negra
     indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
-    
-    # If there is not exactly one black pearl, return False
     if len(indices) != 1:
         return False
-    
     indice = indices[0]
-    
-    # Ensure the black pearl is not at the ends of the line
     if indice == 0 or indice == len(linea) - 1:
         return False
-    
-    # Get the points before and after the black pearl
     y1, x1 = linea[indice - 1]
     y2, x2 = linea[indice + 1]
-    
-    # Check if the points form a horizontal or vertical line segment with the black pearl
-    if (y1 == fila and y2 == fila and (x1 < columna < x2 or x2 < columna < x1)) or \
-       (x1 == columna and x2 == columna and (y1 < fila < y2 or y2 < fila < y1)):
+    if (y1 == fila and x2 == columna) or (x1 == columna and y2 == fila):
         return True
-    
     return False
 
 
