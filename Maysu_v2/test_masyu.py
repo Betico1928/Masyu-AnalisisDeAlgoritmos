@@ -4,7 +4,6 @@ from unittest.mock import patch
 from io import StringIO
 from masyu import Masyu, leer_archivo_entrada, verificar_solucion, verificar_linea_continua, verificar_perla_blanca, \
     verificar_perla_negra
-from io import StringIO
 
 
 class TestMasyu(unittest.TestCase):
@@ -60,15 +59,19 @@ class TestMasyu(unittest.TestCase):
         self.assertFalse(verificar_perla_blanca(linea_incorrecta, fila_perla, columna_perla))
 
     def test_verificar_perla_negra(self):
-        # Caso de prueba con línea que hace un giro de 90 grados en perla negra
-        linea_correcta = [(1, 1), (1, 2), (2, 2), (3, 2), (3, 3)]
+        # Caso de prueba con línea que pasa por perla negra de forma correcta
+        linea_correcta = [(1, 1), (1, 2), (2, 2), (2, 3), (2, 4)]
         fila_perla = 2
         columna_perla = 2
         self.assertTrue(verificar_perla_negra(linea_correcta, fila_perla, columna_perla))
 
-        # Caso de prueba con línea que no hace un giro de 90 grados en perla negra
-        linea_incorrecta = [(1, 1), (1, 2), (1, 3)]
-        self.assertFalse(verificar_perla_negra(linea_incorrecta, fila_perla, columna_perla))
+        # Caso de prueba con línea que no sigue recta después del giro en perla negra
+        linea_incorrecta_1 = [(1, 1), (1, 2), (2, 2), (3, 2), (3, 3)]
+        self.assertFalse(verificar_perla_negra(linea_incorrecta_1, fila_perla, columna_perla))
+
+        # Caso de prueba con línea que no hace giro en perla negra
+        linea_incorrecta_2 = [(1, 1), (1, 2), (1, 3)]
+        self.assertFalse(verificar_perla_negra(linea_incorrecta_2, fila_perla, columna_perla))
 
 
 if __name__ == '__main__':

@@ -6,46 +6,6 @@ def es_valido(fila, columna, n_filas, n_columnas, visitados):
     return 0 <= fila < n_filas and 0 <= columna < n_columnas and (fila, columna) not in visitados
 
 
-def verificar_linea_continua(linea):
-    if len(linea) < 2:
-        return False
-    for i in range(1, len(linea)):
-        y1, x1 = linea[i - 1]
-        y2, x2 = linea[i]
-        if abs(y1 - y2) + abs(x1 - x2) != 1:
-            return False
-    return True
-
-
-def verificar_perla_blanca(linea, fila, columna):
-    indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
-    if len(indices) != 1:
-        return False
-    indice = indices[0]
-    if indice == 0 or indice == len(linea) - 1:
-        return False
-    y1, x1 = linea[indice - 1]
-    y2, x2 = linea[indice + 1]
-    if (y1 == fila and y2 == fila and x1 != columna and x2 != columna) or (
-            x1 == columna and x2 == columna and y1 != fila and y2 != fila):
-        return True
-    return False
-
-
-def verificar_perla_negra(linea, fila, columna):
-    indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
-    if len(indices) != 1:
-        return False
-    indice = indices[0]
-    if indice == 0 or indice == len(linea) - 1:
-        return False
-    y1, x1 = linea[indice - 1]
-    y2, x2 = linea[indice + 1]
-    if (y1 == fila and x2 == columna) or (x1 == columna and y2 == fila):
-        return True
-    return False
-
-
 # Heurística de Manhattan
 def distancia_manhattan(p1, p2):
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])

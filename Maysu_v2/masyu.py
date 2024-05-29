@@ -113,8 +113,7 @@ class Masyu:
         for i in range(len(self.linea_actual) - 1):
             y1, x1 = self.linea_actual[i]
             y2, x2 = self.linea_actual[i + 1]
-            self.canvas.create_line(x1 * 40 + 20, y1 * 40 + 20, x2 * 40 + 20, y2 * 40 + 20, fill="red", width=2,
-                                    tag="linea")
+            self.canvas.create_line(x1 * 40 + 20, y1 * 40 + 20, x2 * 40 + 20, y2 * 40 + 20, fill="red", width=2, tag="linea")
 
     def imprimir_ruta(self):
         print("Ruta actual:", self.linea_actual)
@@ -175,7 +174,7 @@ def verificar_perla_blanca(linea, fila, columna):
 
 
 def verificar_perla_negra(linea, fila, columna):
-    # Verifica si la línea hace un giro de 90 grados en la perla negra
+    # Verifica si la línea hace un giro de 90 grados en la perla negra y si sigue recto después del giro
     indices = [i for i, punto in enumerate(linea) if punto == (fila, columna)]
     if len(indices) != 1:
         return False
@@ -184,9 +183,19 @@ def verificar_perla_negra(linea, fila, columna):
         return False
     y1, x1 = linea[indice - 1]
     y2, x2 = linea[indice + 1]
-    if (y1 == fila and x2 == columna) or (x1 == columna and y2 == fila):
-        return True
-    return False
+
+    # Verificar el giro de 90 grados
+    if not ((y1 == fila and x2 == columna and abs(x1 - columna) == 1 and abs(y2 - fila) == 1) or
+            (x1 == columna and y2 == fila and abs(y1 - fila) == 1 and abs(x2 - columna) == 1)):
+        return False
+
+    # Verificar que sigue recto después del giro
+    if indice + 2 < len(linea):
+        y3, x3 = linea[indice + 2]
+        if (y2 == fila and x2 != columna and y3 != fila) or (x2 == columna and y2 != fila and x3 != columna):
+            return False
+
+    return True
 
 
 if __name__ == "__main__":
