@@ -1,0 +1,696 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsthm}
+\usepackage{algorithm,algpseudocode}
+\usepackage{graphicx} % Required for inserting images
+
+\title{Proyecto Final - Análisis de Algoritmos}
+\author{Alberto Vigna \& Camilo Martinez}
+\date{May 2024}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este proyecto aborda la solución del juego Masyu, un rompecabezas de lógica que consiste en conectar todas las perlas en una cuadrícula de \( n \times n \) posiciones siguiendo reglas específicas. Se presenta un algoritmo que emplea la heurística de distancia Manhattan y el algoritmo de búsqueda A* para encontrar una solución válida que conecte todas las perlas, respetando las condiciones impuestas por su color (perlas blancas y negras). El algoritmo desarrollado se integra con una interfaz gráfica implementada en Python utilizando la biblioteca Tkinter, permitiendo a los usuarios interactuar con el juego y solicitar la solución automática. Los resultados demuestran que el enfoque propuesto es efectivo para resolver el juego Masyu, proporcionando soluciones óptimas que cumplen con todas las reglas del juego.
+\end{abstract}
+
+\section{Análisis}
+
+El juego del collar de perlas (Masyu) es un rompecabezas lógico que se juega en una cuadrícula de tamaño \( n \times n \). Cada celda de la cuadrícula puede contener una perla blanca, una perla negra o estar vacía. El objetivo del juego es dibujar una única línea continua que pase por todas las perlas respetando ciertas reglas específicas.
+
+\subsection{Reglas del Juego}
+
+Las reglas del juego Masyu son las siguientes:
+
+\begin{enumerate}
+    \item La línea debe formar un único bucle continuo sin intersecciones ni ramificaciones.
+    \item La línea debe pasar por todas las perlas exactamente una vez.
+    \item La línea debe seguir reglas específicas al pasar por perlas blancas y negras.
+\end{enumerate}
+
+\subsection{Condiciones para las Perlas Blancas}
+
+Sea \( (i, j) \) la posición de una perla blanca en la cuadrícula. La línea debe cumplir las siguientes condiciones al pasar por una perla blanca:
+
+\begin{enumerate}
+    \item La línea debe pasar recta a través de la perla blanca.
+    \item La línea debe girar 90 grados inmediatamente antes o después de la perla blanca.
+\end{enumerate}
+
+Formalmente, si \( (i, j) \) es una perla blanca, entonces debe existir una secuencia de posiciones \( (i_1, j_1), (i, j), (i_2, j_2) \) en la línea tal que:
+
+\[
+\begin{cases}
+i_1 = i = i_2 \quad \text{y} \quad j_1 \neq j \neq j_2, \quad \text{ó}\\
+j_1 = j = j_2 \quad \text{y} \quad i_1 \neq i \neq i_2
+\end{cases}
+\]
+
+Además, debe haber un giro de 90 grados en una de las posiciones adyacentes:
+
+\[
+\begin{cases}
+(i_0, j_1) \text{ tal que } (i_0 = i \pm 1 \text{ y } j_1 = j) \quad \text{ó}\\
+(i_2, j_3) \text{ tal que } (i_2 = i \text{ y } j_3 = j \pm 1)
+\end{cases}
+\]
+
+\subsection{Condiciones para las Perlas Negras}
+
+Sea \( (i, j) \) la posición de una perla negra en la cuadrícula. La línea debe cumplir las siguientes condiciones al pasar por una perla negra:
+
+\begin{enumerate}
+    \item La línea debe girar 90 grados en la perla negra.
+    \item La línea debe continuar recta en ambas direcciones después del giro.
+\end{enumerate}
+
+Formalmente, si \( (i, j) \) es una perla negra, entonces debe existir una secuencia de posiciones \( (i_1, j_1), (i, j), (i_2, j_2) \) en la línea tal que:
+
+\[
+\begin{cases}
+(i_1 = i \text{ y } j_1 = j \pm 1) \quad \text{ó}\\
+(i_2 = i \pm 1 \text{ y } j_2 = j)
+\end{cases}
+\]
+
+Además, debe haber un giro de 90 grados en la perla negra y continuar recta después del giro:
+
+\[
+\begin{cases}
+(i_3 = i \pm 1 \text{ y } j_1 = j) \quad \text{ó}\\
+(i_2 = i \text{ y } j_3 = j \pm 1)
+\end{cases}
+\]
+
+\subsection{Verificación de la Solución}
+
+Para verificar que una solución es válida, se debe comprobar que la línea cumple las siguientes condiciones:
+
+\begin{itemize}
+    \item La línea es continua y sin intersecciones.
+    \item La línea pasa por todas las perlas exactamente una vez.
+    \item La línea respeta las reglas al pasar por perlas blancas y negras.
+\end{itemize}
+
+Para formalizar la verificación de la continuidad de la línea, se debe asegurar que para cada par de posiciones consecutivas \( (i, j) \) y \( (i', j') \) en la línea, se cumple que:
+
+\[
+|i - i'| + |j - j'| = 1
+\]
+
+Esta condición asegura que cada par de posiciones consecutivas están adyacentes en la cuadrícula.
+
+Finalmente, para verificar que la solución respeta las reglas de las perlas, se deben aplicar las condiciones matemáticas descritas anteriormente para las perlas blancas y negras a lo largo de toda la línea.
+
+\section{Diseño}
+
+El diseño del proyecto Masyu se distribuye en varias partes principales: la lectura del archivo de entrada, la implementación de la lógica del juego y la interfaz gráfica de usuario. A continuación, se detallan cada una de estas partes.
+
+\subsection{Estructura del Código}
+
+El código se divide en los siguientes componentes:
+
+\begin{itemize}
+    \item \textbf{Verificaciones}: Conjunto de funciones que se encargan de verificar la ruta trazada y que esta siga las normas del juego
+    \item \textbf{Masyu}: Clase principal que maneja la lógica del juego y la interfaz gráfica.
+    \item \textbf{supersolver}: Todos los métodos utilizados para poder resolver (o intentar mejor dicho) el tablero.
+\end{itemize}
+
+\subsection{Entradas y Salidas del Sistema}
+
+\subsubsection{Entradas}
+
+El sistema recibe una serie de entradas que determinan el estado inicial del tablero de Masyu. Estas entradas se leen desde un archivo de texto y son las siguientes:
+
+\begin{enumerate}
+    \item Una matriz de tamaño \( n \times n \) que representa la cuadrícula del juego, donde cada celda puede contener una perla blanca, una perla negra o estar vacía.
+    \item Una lista de tuplas \((i, j, t)\) donde \( i \) y \( j \) son las coordenadas de la perla en la matriz y \( t \) indica el tipo de perla (1 para blanca y 2 para negra).
+\end{enumerate}
+
+Matemáticamente, el archivo de entrada se representa como:
+
+\[
+\text{entrada} = \begin{cases}
+n & \text{(número de filas y columnas)} \\
+(i_1, j_1, t_1) & \text{(posición y tipo de la primera perla)} \\
+(i_2, j_2, t_2) & \text{(posición y tipo de la segunda perla)} \\
+\vdots & \vdots \\
+(i_k, j_k, t_k) & \text{(posición y tipo de la k-ésima perla)}
+\end{cases}
+\]
+
+\subsubsection{Salidas}
+
+La salida del sistema es una lista de tuplas que indican las posiciones por donde pasa la ruta en el tablero:
+
+\[
+\text{salida} = [(i_1, j_1), (i_2, j_2), \ldots, (i_m, j_m)]
+\]
+
+Donde cada \((i, j)\) representa una celda en la cuadrícula a través de la cual pasa la línea.
+
+
+
+\section{Algoritmos}
+
+\subsection{Verificación}
+
+El archivo \textit{verificaciones.py} contiene funciones clave para verificar la validez de una solución en el juego Masyu. Estas funciones comprueban que la línea que conecta las perlas sigue las reglas del juego y no tiene errores. En esta subsección se muestran cada una de las funcionees, su pseudocódigo y una breve explicación.
+
+\begin{itemize}
+    \item \textbf{verificar\_linea\_continua(linea)}: Esta función verifica si una línea es continua, es decir, si cada punto de la línea está adyacente al siguiente.
+    \item \textbf{verificar\_perla\_blanca(linea, fila, columna)}: Esta función verifica si la línea pasa correctamente por una perla blanca. La línea debe pasar recta por la perla y debe haber un giro de 90 grados inmediatamente antes o después de la perla.
+    
+    \item \textbf{verificar\_perla\_negra(linea, fila, columna)}: Esta función verifica si la línea pasa correctamente por una perla negra. La línea debe girar 90 grados en la perla y continuar recta después del giro.
+    
+    \item\textbf{verificar\_solucion(linea, perlas)}: Esta función verifica si toda la solución es correcta, comprobando que la línea es continua y que pasa correctamente por todas las perlas según su tipo (blanca o negra).
+\end{itemize}
+
+
+ 
+
+
+
+\subsubsection{Pseudocódigo}
+
+\subsubsection{verificar\_linea\_continua(linea)}
+
+\begin{algorithm}[H]
+\caption{verificar\_linea\_continua}
+\begin{algorithmic}[1]
+\Procedure{verificar\_linea\_continua}{linea}
+    \If{longitud de linea < 2}
+        \State \Return Falso
+    \EndIf
+    \For{$i \leftarrow 1$ \textbf{to} longitud de linea - 1}
+        \State $(y1, x1) \leftarrow linea[i - 1]$
+        \State $(y2, x2) \leftarrow linea[i]$
+        \If{$|y1 - y2| + |x1 - x2| \neq 1$}
+            \State \Return Falso
+        \EndIf
+    \EndFor
+    \State \Return Verdadero
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función verifica que cada punto de la línea esté adyacente al siguiente, asegurando que la línea es continua.
+
+\subsubsection{verificar\_perla\_blanca(linea, fila, columna)}
+
+\begin{algorithm}[H]
+\caption{verificar\_perla\_blanca}
+\begin{algorithmic}[1]
+\Procedure{verificar\_perla\_blanca}{linea, fila, columna}
+    \State indices $\leftarrow$ encontrar todos los índices de linea donde punto == (fila, columna)
+    \If{longitud de indices $\neq$ 1}
+        \State \Return Falso
+    \EndIf
+    \State indice $\leftarrow$ indices[0]
+    \If{indice == 0 \textbf{or} indice == longitud de linea - 1}
+        \State \Return Falso
+    \EndIf
+    \State $(y1, x1) \leftarrow linea[indice - 1]$
+    \State $(y2, x2) \leftarrow linea[indice + 1]$
+    \If{(y1 == fila \textbf{and} y2 == fila \textbf{and} x1 $\neq$ columna \textbf{and} x2 $\neq$ columna) \textbf{or} (x1 == columna \textbf{and} x2 == columna \textbf{and} y1 $\neq$ fila \textbf{and} y2 $\neq$ fila)}
+        \State \Return Verdadero
+    \EndIf
+    \State \Return Falso
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función verifica que la línea pasa recta por la perla blanca y que hay un giro de 90 grados inmediatamente antes o después de la perla.
+
+\subsubsection{verificar\_perla\_negra(linea, fila, columna)}
+
+\begin{algorithm}[H]
+\caption{verificar\_perla\_negra}
+\begin{algorithmic}[1]
+\Procedure{verificar\_perla\_negra}{linea, fila, columna}
+    \State indices $\leftarrow$ encontrar todos los índices de linea donde punto == (fila, columna)
+    \If{longitud de indices $\neq$ 1}
+        \State \Return Falso
+    \EndIf
+    \State indice $\leftarrow$ indices[0]
+    \If{indice == 0 \textbf{or} indice == longitud de linea - 1}
+        \State \Return Falso
+    \EndIf
+    \State $(y1, x1) \leftarrow linea[indice - 1]$
+    \State $(y2, x2) \leftarrow linea[indice + 1]$
+    \If{no ((y1 == fila \textbf{and} x2 == columna \textbf{and} $|x1 - columna| == 1$ \textbf{and} $|y2 - fila| == 1$) \textbf{or} (x1 == columna \textbf{and} y2 == fila \textbf{and} $|y1 - fila| == 1$ \textbf{and} $|x2 - columna| == 1$))}
+        \State \Return Falso
+    \EndIf
+    \If{indice + 2 < longitud de linea}
+        \State $(y3, x3) \leftarrow linea[indice + 2]$
+        \If{(y2 == fila \textbf{and} x2 $\neq$ columna \textbf{and} y3 $\neq$ fila) \textbf{or} (x2 == columna \textbf{and} y2 $\neq$ fila \textbf{and} x3 $\neq$ columna)}
+            \State \Return Falso
+        \EndIf
+    \EndIf
+    \State \Return Verdadero
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función verifica que la línea gira 90 grados en la perla negra y continúa recta después del giro.
+
+\subsubsection{verificar\_solucion(linea, perlas)}
+
+\begin{algorithm}[H]
+\caption{verificar\_solucion}
+\begin{algorithmic}[1]
+\Procedure{verificar\_solucion}{linea, perlas}
+    \State errores $\leftarrow$ []
+    \If{no verificar\_linea\_continua(linea)}
+        \State agregar ("Línea no continua",) a errores
+    \EndIf
+    \For{cada (fila, columna, tipo) \textbf{en} perlas}
+        \If{tipo == 1}
+            \If{no verificar\_perla\_blanca(linea, fila - 1, columna - 1)}
+                \State agregar (fila - 1, columna - 1) a errores
+            \EndIf
+        \EndIf
+        \If{tipo == 2}
+            \If{no verificar\_perla\_negra(linea, fila - 1, columna - 1)}
+                \State agregar (fila - 1, columna - 1) a errores
+            \EndIf
+        \EndIf
+    \EndFor
+    \State \Return longitud de errores == 0, errores
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función verifica que la solución es correcta comprobando que la línea es continua y que pasa correctamente por todas las perlas.
+
+\subsubsection{Complejidad de los Algoritmos}
+
+\textbf{verificar\_linea\_continua(linea)}: La complejidad es \(O(n)\), donde \(n\) es la longitud de la línea, ya que revisa cada segmento de la línea una vez.
+
+\textbf{verificar\_perla\_blanca(linea, fila, columna)}: La complejidad es \(O(n)\), donde \(n\) es la longitud de la línea, ya que recorre la línea para encontrar los índices de la perla y verifica las posiciones adyacentes.
+
+\textbf{verificar\_perla\_negra(linea, fila, columna)}: La complejidad es \(O(n)\), donde \(n\) es la longitud de la línea, ya que recorre la línea para encontrar los índices de la perla y verifica las posiciones adyacentes.
+
+\textbf{verificar\_solucion(linea, perlas)}: La complejidad es \(O(m \cdot n)\), donde \(m\) es el número de perlas y \(n\) es la longitud de la línea, ya que verifica cada perla en la línea.
+
+\subsection{Solucionador}
+
+El archivo \textit{supersolver.py} contiene funciones que utilizan la heurística de la distancia de Manhattan y el algoritmo A* para encontrar y completar una ruta válida en el juego Masyu. La distancia de Manhattan es una medida heurística utilizada para estimar la distancia entre dos puntos en una cuadrícula, calculada como la suma de las diferencias absolutas de sus coordenadas. El algoritmo A* es un algoritmo de búsqueda que utiliza una función de costo para encontrar la ruta más corta entre dos puntos. A continuación se presenta una descripción detallada de cada función, su pseudocódigo y una breve explicación.
+
+\subsubsection{Pseudocódigo}
+
+\textbf{distancia\_manhattan(fila1, columna1, fila2, columna2)}: Esta función calcula la distancia de Manhattan entre dos puntos en la cuadrícula.
+
+\begin{algorithm}[H]
+\caption{distancia\_manhattan}
+\begin{algorithmic}[1]
+\Procedure{distancia\_manhattan}{fila1, columna1, fila2, columna2}
+    \State \Return $|fila1 - fila2| + |columna1 - columna2|$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función retorna la suma de las diferencias absolutas de las coordenadas de dos puntos, proporcionando una estimación de la distancia.
+
+\textbf{obtener\_vecinos(fila, columna, n\_filas, n\_columnas)}: Esta función obtiene los vecinos válidos de una posición en la cuadrícula.
+
+\begin{algorithm}[H]
+\caption{obtener\_vecinos}
+\begin{algorithmic}[1]
+\Procedure{obtener\_vecinos}{fila, columna, n\_filas, n\_columnas}
+    \State vecinos $\leftarrow$ []
+    \If{fila > 0}
+        \State vecinos.\text{append}(fila - 1, columna)
+    \EndIf
+    \If{fila < n\_filas - 1}
+        \State vecinos.\text{append}(fila + 1, columna)
+    \EndIf
+    \If{columna > 0}
+        \State vecinos.\text{append}(fila, columna - 1)
+    \EndIf
+    \If{columna < n\_columnas - 1}
+        \State vecinos.\text{append}(fila, columna + 1)
+    \EndIf
+    \State \Return vecinos
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función retorna una lista de posiciones adyacentes válidas (vecinos) en la cuadrícula.
+
+\textbf{encontrar\_ruta(inicio, meta, n\_filas, n\_columnas, ruta\_existente)}: Esta función utiliza el algoritmo A* para encontrar la ruta más corta entre dos puntos específicos en la cuadrícula.
+
+\begin{algorithm}[H]
+\caption{encontrar\_ruta}
+\begin{algorithmic}[1]
+\Procedure{encontrar\_ruta}{inicio, meta, n\_filas, n\_columnas, ruta\_existente}
+    \State open\_set $\leftarrow$ priority\_queue()
+    \State open\_set.\text{push}(0, inicio)
+    \State came\_from $\leftarrow$ map()
+    \State g\_score $\leftarrow$ map(inicio $\rightarrow$ 0)
+    \State f\_score $\leftarrow$ map(inicio $\rightarrow$ \text{distancia\_manhattan}(inicio, meta))
+    \While{open\_set \text{is not empty}}
+        \State current $\leftarrow$ open\_set.\text{pop}()
+        \If{current == meta}
+            \State \Return \text{reconstruir\_camino}(came\_from, current)
+        \EndIf
+        \For{vecino \textbf{in} \text{obtener\_vecinos}(current, n\_filas, n\_columnas)}
+            \If{vecino \textbf{in} ruta\_existente}
+                \State \textbf{continue}
+            \EndIf
+            \State tentative\_g\_score $\leftarrow$ g\_score[current] + 1
+            \If{vecino \textbf{not in} g\_score \textbf{or} tentative\_g\_score < g\_score[vecino]}
+                \State came\_from[vecino] $\leftarrow$ current
+                \State g\_score[vecino] $\leftarrow$ tentative\_g\_score
+                \State f\_score[vecino] $\leftarrow$ tentative\_g\_score + \text{distancia\_manhattan}(vecino, meta)
+                \State open\_set.\text{push}(f\_score[vecino], vecino)
+            \EndIf
+        \EndFor
+    \EndWhile
+    \State \Return \text{None} \Comment{No se encontró una ruta}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función utiliza el algoritmo A* para encontrar la ruta más corta entre dos puntos específicos en la cuadrícula, evitando las posiciones ya existentes en la ruta.
+
+\textbf{completar\_ruta(n\_filas, n\_columnas, perlas, ruta\_actual)}: Esta función completa la ruta pasando por todas las perlas en la cuadrícula.
+
+\begin{algorithm}[H]
+\caption{completar\_ruta}
+\begin{algorithmic}[1]
+\Procedure{completar\_ruta}{n\_filas, n\_columnas, perlas, ruta\_actual}
+    \If{ruta\_actual \text{is empty}}
+        \State \Return []
+    \EndIf
+    \State puntos\_clave $\leftarrow$ ruta\_actual.\text{copy}()
+    \State perlas\_ordenadas $\leftarrow$ \text{sorted}(perlas, \text{key} = \text{lambda} p: \text{distancia\_manhattan}(p[0], p[1], ruta\_actual[-1][0], ruta\_actual[-1][1]))
+    \State puntos\_clave.\text{extend}([(p[0] - 1, p[1] - 1) \text{for} p \text{in} perlas\_ordenadas \text{if} (p[0] - 1, p[1] - 1) \text{not in} puntos\_clave])
+    \State puntos\_clave.\text{append}(ruta\_actual[0])
+    \State ruta\_completa $\leftarrow$ []
+    \For{i \text{in range}(len(puntos\_clave) - 1)}
+        \State parte\_ruta $\leftarrow$ \text{encontrar\_ruta}(puntos\_clave[i], puntos\_clave[i + 1], n\_filas, n\_columnas, ruta\_completa)
+        \If{parte\_ruta}
+            \State ruta\_completa.\text{extend}(parte\_ruta[1:])
+        \Else
+            \State \Return ruta\_completa
+        \EndIf
+    \EndFor
+    \State \Return ruta\_completa
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función utiliza la función \textbf{encontrar\_ruta} para conectar todos los puntos clave (perlas y el punto de inicio) en la cuadrícula, completando la ruta.
+
+\textbf{reconstruir\_camino(came\_from, actual)}: Esta función reconstruye el camino desde el punto final hasta el punto inicial usando el diccionario de seguimiento.
+
+\begin{algorithm}[H]
+\caption{reconstruir\_camino}
+\begin{algorithmic}[1]
+\Procedure{reconstruir\_camino}{came\_from, actual}
+    \State total\_path $\leftarrow$ [actual]
+    \While{actual \textbf{in} came\_from}
+        \State actual $\leftarrow$ came\_from[actual]
+        \State total\_path.\text{append}(actual)
+    \EndWhile
+    \State \Return \text{total\_path[::-1]}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función utiliza el diccionario de seguimiento \textbf{came\_from} para reconstruir la ruta desde el punto final hasta el inicial.
+
+\subsubsection{Complejidad de los Algoritmos}
+
+\textbf{distancia\_manhattan(fila1, columna1, fila2, columna2)}: La complejidad es \(O(1)\) ya que solo realiza operaciones aritméticas simples.
+
+\textbf{obtener\_vecinos(fila, columna, n\_filas, n\_columnas)}: La complejidad es \(O(1)\) ya que el número de vecinos es constante y no depende del tamaño de la cuadrícula.
+
+\textbf{encontrar\_ruta(inicio, meta, n\_filas, n\_columnas, ruta\_existente)}: La complejidad en el peor caso es \(O(b^d)\), donde \(b\) es el factor de ramificación y \(d\) es la profundidad de la solución en el espacio de búsqueda. En el mejor caso, la complejidad es \(O(n \log n)\), siendo \(n\) el número de nodos explorados.
+
+\textbf{completar\_ruta(n\_filas, n\_columnas, perlas, ruta\_actual)}: La complejidad depende del número de perlas y la longitud de la ruta. En el peor caso, si hay \(m\) perlas, la complejidad es \(O(m \cdot b^d)\).
+
+\textbf{reconstruir\_camino(came\_from, actual)}: La complejidad es \(O(n)\), donde \(n\) es la longitud del camino, ya que reconstruye la ruta recorriendo el diccionario \textbf{came\_from}.
+
+\subsection{Masyu}
+
+El archivo principal del proyecto, \textit{masyu.py}, implementa la lógica del juego Masyu y la interfaz gráfica de usuario utilizando la biblioteca Tkinter. Este archivo contiene funciones para leer el archivo de entrada, manejar los eventos del usuario, dibujar el tablero y las perlas, así como verificar y completar la ruta automáticamente.
+
+\textbf{leer\_archivo\_entrada(ruta)}: Esta función lee el archivo de entrada y extrae la configuración del tablero, incluyendo el tamaño del tablero y la posición de las perlas.
+
+\begin{algorithm}[H]
+\caption{leer\_archivo\_entrada}
+\begin{algorithmic}[1]
+\Procedure{leer\_archivo\_entrada}{ruta}
+    \State \text{file} $\leftarrow$ \text{abrir}(ruta)
+    \State lineas $\leftarrow$ \text{file}.\text{readlines}()
+    \State n $\leftarrow$ \text{int}(lineas[0].\text{strip}())
+    \State perlas $\leftarrow$ []
+    \For{linea \textbf{in} lineas[1:]}
+        \State fila, columna, tipo $\leftarrow$ \text{map}(\text{int}, linea.\text{strip}().\text{split}(','))
+        \State perlas.\text{append}((fila, columna, tipo))
+    \EndFor
+    \State \Return n, n, perlas
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Esta función retorna el tamaño del tablero y una lista de perlas con sus posiciones y tipos.
+
+\textbf{Clase Masyu}: La clase principal que maneja la lógica del juego y la interfaz gráfica. Contiene métodos para dibujar el tablero, dibujar perlas, manejar eventos de usuario y verificar o completar la ruta.
+
+\begin{algorithm}[H]
+\caption{Masyu: \_\_init\_\_}
+\begin{algorithmic}[1]
+\Procedure{\_\_init\_\_}{master, n\_filas, n\_columnas, perlas}
+    \State self.master $\leftarrow$ master
+    \State self.n\_filas $\leftarrow$ n\_filas
+    \State self.n\_columnas $\leftarrow$ n\_columnas
+    \State self.perlas $\leftarrow$ perlas
+    \State self.tablero $\leftarrow$ [[0 \textbf{for} \_ \textbf{in} \text{range}(n\_columnas)] \textbf{for} \_ \textbf{in} \text{range}(n\_filas)]
+    \State self.canvas $\leftarrow$ \text{tk.Canvas}(master, \text{width}=n\_columnas * 40, \text{height}=n\_filas * 40)
+    \State self.canvas.\text{pack}()
+    \State self.\text{dibujar\_tablero}()
+    \State self.\text{dibujar\_perlas}()
+    \State self.linea\_actual $\leftarrow$ []
+    \State self.lineas\_dibujadas $\leftarrow$ []
+    \State self.canvas.\text{bind}("<Button-1>", self.\text{iniciar\_linea})
+    \State master.\text{bind}("<Up>", self.\text{mover\_arriba})
+    \State master.\text{bind}("<Down>", self.\text{mover\_abajo})
+    \State master.\text{bind}("<Left>", self.\text{mover\_izquierda})
+    \State master.\text{bind}("<Right>", self.\text{mover\_derecha})
+    \State self.boton\_verificar $\leftarrow$ \text{tk.Button}(master, \text{text}="Verificar Solución", \text{command}=self.\text{verificar\_solucion})
+    \State self.boton\_verificar.\text{pack}()
+    \State self.boton\_auto $\leftarrow$ \text{tk.Button}(master, \text{text}="Completar Ruta", \text{command}=self.\text{completar\_ruta\_automatica})
+    \State self.boton\_auto.\text{pack}()
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este constructor inicializa el tablero y la interfaz gráfica, y configura los eventos de usuario.
+
+\textbf{completar\_ruta\_automatica()}: Este método completa automáticamente la ruta utilizando la función \textbf{completar\_ruta} del archivo \textit{supersolver.py}.
+
+\begin{algorithm}[H]
+\caption{completar\_ruta\_automatica}
+\begin{algorithmic}[1]
+\Procedure{completar\_ruta\_automatica}{}
+    \State nueva\_ruta $\leftarrow$ \text{completar\_ruta}(self.n\_filas, self.n\_columnas, self.perlas, self.linea\_actual)
+    \If{nueva\_ruta}
+        \State self.linea\_actual $\leftarrow$ nueva\_ruta
+        \State self.\text{dibujar\_linea}()
+        \State self.\text{imprimir\_ruta}()
+    \Else
+        \State \text{messagebox.showinfo}("Resultado", "No se encontró una ruta completa, mostrando la mejor ruta encontrada.")
+        \State self.\text{dibujar\_linea}()
+        \State self.\text{imprimir\_ruta}()
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método llama a la función \textbf{completar\_ruta} para intentar completar la ruta y actualiza la interfaz gráfica con la ruta encontrada.
+
+\textbf{dibujar\_tablero()}: Este método dibuja la cuadrícula del tablero en el canvas de Tkinter.
+
+\begin{algorithm}[H]
+\caption{dibujar\_tablero}
+\begin{algorithmic}[1]
+\Procedure{dibujar\_tablero}{}
+    \For{i \textbf{in} \text{range}(self.n\_filas)}
+        \For{j \textbf{in} \text{range}(self.n\_columnas)}
+            \State self.canvas.\text{create\_rectangle}(j * 40, i * 40, (j + 1) * 40, (i + 1) * 40, \text{outline}="black")
+    \EndFor
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método crea un rectángulo para cada celda de la cuadrícula.
+
+\textbf{dibujar\_perlas()}: Este método dibuja las perlas en la cuadrícula basándose en sus posiciones y tipos.
+
+\begin{algorithm}[H]
+\caption{dibujar\_perlas}
+\begin{algorithmic}[1]
+\Procedure{dibujar\_perlas}{}
+    \For{fila, columna, tipo \textbf{in} self.perlas}
+        \State x, y $\leftarrow$ (columna - 1) * 40 + 20, (fila - 1) * 40 + 20
+        \State color $\leftarrow$ 'white' \textbf{if} tipo == 1 \textbf{else} 'black'
+        \State self.canvas.\text{create\_oval}(x - 15, y - 15, x + 15, y + 15, \text{fill}=color, \text{outline}="black")
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método crea un óvalo para cada perla en sus respectivas posiciones.
+
+\textbf{iniciar\_linea(event)}: Este método inicia una nueva línea en la posición donde el usuario hace clic.
+
+\begin{algorithm}[H]
+\caption{iniciar\_linea}
+\begin{algorithmic}[1]
+\Procedure{iniciar\_linea}{event}
+    \State self.linea\_actual $\leftarrow$ [(event.y // 40, event.x // 40)]
+    \State self.\text{dibujar\_linea}()
+    \State self.\text{imprimir\_ruta}()
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método inicia una nueva línea y la dibuja en el canvas.
+
+\textbf{mover\_arriba(event)}, \textbf{mover\_abajo(event)}, \textbf{mover\_izquierda(event)}, \textbf{mover\_derecha(event)}: Estos métodos permiten mover la línea en las cuatro direcciones cardinales.
+
+\begin{algorithm}[H]
+\caption{mover\_arriba}
+\begin{algorithmic}[1]
+\Procedure{mover\_arriba}{event}
+    \If{self.linea\_actual}
+        \State y, x $\leftarrow$ self.linea\_actual[-1]
+        \If{y > 0}
+            \State self.linea\_actual.\text{append}((y - 1, x))
+            \State self.\text{dibujar\_linea}()
+            \State self.\text{imprimir\_ruta}()
+        \EndIf
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{mover\_abajo}
+\begin{algorithmic}[1]
+\Procedure{mover\_abajo}{event}
+    \If{self.linea\_actual}
+        \State y, x $\leftarrow$ self.linea\_actual[-1]
+        \If{y < self.n\_filas - 1}
+            \State self.linea\_actual.\text{append}((y + 1, x))
+            \State self.\text{dibujar\_linea}()
+            \State self.\text{imprimir\_ruta}()
+        \EndIf
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{mover\_izquierda}
+\begin{algorithmic}[1]
+\Procedure{mover\_izquierda}{event}
+    \If{self.linea\_actual}
+        \State y, x $\leftarrow$ self.linea\_actual[-1]
+        \If{x > 0}
+            \State self.linea\_actual.\text{append}((y, x - 1))
+            \State self.\text{dibujar\_linea}()
+            \State self.\text{imprimir\_ruta}()
+        \EndIf
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{mover\_derecha}
+\begin{algorithmic}[1]
+\Procedure{mover\_derecha}{event}
+    \If{self.linea\_actual}
+        \State y, x $\leftarrow$ self.linea\_actual[-1]
+        \If{x < self.n\_columnas - 1}
+            \State self.linea\_actual.\text{append}((y, x + 1))
+            \State self.\text{dibujar\_linea}()
+            \State self.\text{imprimir\_ruta}()
+        \EndIf
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Estos métodos permiten al usuario extender la línea en cualquier dirección usando las teclas de flecha.
+
+\textbf{dibujar\_linea()}: Este método dibuja la línea actual en el canvas.
+
+\begin{algorithm}[H]
+\caption{dibujar\_linea}
+\begin{algorithmic}[1]
+\Procedure{dibujar\_linea}{}
+    \State self.canvas.\text{delete}("linea")
+    \For{i \textbf{in} \text{range}(len(self.linea\_actual) - 1)}
+        \State y1, x1 $\leftarrow$ self.linea\_actual[i]
+        \State y2, x2 $\leftarrow$ self.linea\_actual[i + 1]
+        \State self.canvas.\text{create\_line}(x1 * 40 + 20, y1 * 40 + 20, x2 * 40 + 20, y2 * 40 + 20, \text{fill}="red", \text{width}=2, \text{tag}="linea")
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método dibuja una línea roja en el canvas entre los puntos especificados en \textbf{linea\_actual}.
+
+\textbf{imprimir\_ruta()}: Este método imprime la ruta actual en la consola.
+
+\begin{algorithm}[H]
+\caption{imprimir\_ruta}
+\begin{algorithmic}[1]
+\Procedure{imprimir\_ruta}{}
+    \State \text{print}("Ruta actual:", self.linea\_actual)
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método simplemente imprime la lista de puntos por los que pasa la línea actual.
+
+\textbf{verificar\_solucion()}: Este método verifica si la solución actual es correcta utilizando la función \textbf{verificar\_solucion} del archivo \textit{verificaciones.py}.
+
+\begin{algorithm}[H]
+\caption{verificar\_solucion}
+\begin{algorithmic}[1]
+\Procedure{verificar\_solucion}{}
+    \State es\_correcto, errores $\leftarrow$ \text{verificar\_solucion}(self.linea\_actual, self.perlas)
+    \If{es\_correcto}
+        \State \text{messagebox.showinfo}("Resultado", "¡Solución correcta!")
+    \Else
+        \State mensaje\_error $\leftarrow$ "Solución incorrecta. Errores en las celdas:\n" + "\n".\text{join}([f"Fila {e[0] + 1}, Columna {e[1] + 1}" \text{for} e \text{in} errores])
+        \State \text{messagebox.showerror}("Resultado", mensaje\_error)
+        \State \text{print}("Errores en las celdas:", errores)
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Este método muestra un mensaje indicando si la solución es correcta o incorrecta, y lista los errores si los hay.
+
+\subsubsection{Complejidad de los Algoritmos}
+
+\textbf{leer\_archivo\_entrada(ruta)}: La complejidad es \(O(n)\), donde \(n\) es el número de líneas en el archivo, ya que lee y procesa cada línea una vez.
+
+\textbf{Masyu: \_\_init\_\_} y métodos de dibujo: La complejidad de los métodos de dibujo es \(O(n \times m)\), donde \(n\) es el número de filas y \(m\) es el número de columnas, ya que dibuja cada celda del tablero y cada perla una vez.
+
+\textbf{completar\_ruta\_automatica()}, \textbf{verificar\_solucion()}: Estas funciones dependen de las funciones \textbf{completar\_ruta} y \textbf{verificar\_solucion} respectivamente, cuyas complejidades ya han sido analizadas.
+
+\end{document}
+
