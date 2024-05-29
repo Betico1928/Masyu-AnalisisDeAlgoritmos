@@ -131,7 +131,7 @@ class Masyu:
 
 
 if __name__ == "__main__":
-    n_filas, n_columnas, perlas = leer_archivo_entrada('inputt.txt')
+    n_filas, n_columnas, perlas = leer_archivo_entrada('input.txt')
 
     root = tk.Tk()
     root.title("Juego Masyu")

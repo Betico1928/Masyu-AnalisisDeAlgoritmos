@@ -47,7 +47,7 @@ def encontrar_ruta(inicio, meta, n_filas, n_columnas, ruta_existente):
 # Función para completar la ruta pasando por todas las perlas
 def completar_ruta(n_filas, n_columnas, perlas, ruta_actual):
     if not ruta_actual:
-        return None
+        return []
 
     puntos_clave = ruta_actual[:]  # Copia de la ruta actual
     perlas_ordenadas = sorted(perlas, key=lambda p: distancia_manhattan(p[0], p[1], ruta_actual[-1][0], ruta_actual[-1][1]))
@@ -60,7 +60,7 @@ def completar_ruta(n_filas, n_columnas, perlas, ruta_actual):
         if parte_ruta:
             ruta_completa += parte_ruta[1:]  # Evitar duplicar el punto de inicio de la siguiente parte
         else:
-            return None  # Si no se encuentra una parte de la ruta, falla
+            return ruta_completa  # Devuelve la ruta más larga encontrada si no encuentra la solución
 
     return ruta_completa
 
