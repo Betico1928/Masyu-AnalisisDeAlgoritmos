@@ -17,7 +17,7 @@ def obtener_vecinos(fila, columna, n_filas, n_columnas):
         vecinos.append((fila, columna + 1))
     return vecinos
 
-# Función para encontrar la ruta entre dos puntos específicos usando A*
+# Función para encontrar la ruta entre dos puntos específicos usando A*   3 , 3.5 , 4 ,
 def encontrar_ruta(inicio, meta, n_filas, n_columnas, ruta_existente):
     open_set = []
     heapq.heappush(open_set, (0, inicio))
